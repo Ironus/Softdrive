@@ -3,8 +3,6 @@ import java.net.*;
 
 public class Client {
 
-  // args[0] - nazwa hosta
-  // args[1] - numer portu
   public static void main(String[] args) {
     try {
       // ustal adres serwera
@@ -20,9 +18,11 @@ public class Client {
       // pobierz strumienie i zbuduj na nich
       // "lepsze" strumienie
       DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-
+      DataInputStream dis = new DataInputStream(socket.getInputStream());
+      int number = dis.readInt();
       dos.write(110);
-
+      System.out.println(number);
+      dis.close();
       dos.close();
 
             // koniec rozmowy
