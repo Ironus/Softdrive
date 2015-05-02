@@ -41,8 +41,9 @@ int sendFile(int clientSocket, char path[]) {
   printf("\tFile sending.\n");
   file = fopen(path, "rb");
 
-  time_t start, end;
+  time_t start, middle, end;
   time(&start);
+  middle = start;
   while (totalSent < fileSize) {
     read = fread(buffer, 1, sizeof(buffer), file);
     sent = send(clientSocket, buffer, read, 0);
@@ -52,9 +53,12 @@ int sendFile(int clientSocket, char path[]) {
     time(&end);
     double totalSentMB = (double)(totalSent / 1024)/1024;
     double transferSpeed = (totalSentMB * 8.0) / difftime(end, start);
-    printf("\t\tSent %.2f MB with speed %.2f Mb/s\n", totalSentMB, transferSpeed);
+    if((int)difftime(end, middle) >= 1 || middle == 0)
+      printf("\t\tSent %.2f MB with speed %.2f Mb/s\n", totalSentMB, transferSpeed);
+    middle = end;
   }
-  printf("\t\tFile has been sent.\n");
+  time(&end);
+  printf("\t\tFile has been sent. Total time: %d sec.\n", (int)difftime(end, start));
 
   return 0;
 }

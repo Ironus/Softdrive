@@ -27,18 +27,33 @@ public class Client {
       dos.write(pathBytes);
 
       int fileSize = dis.readInt();
-      System.out.println(fileSize);
+      System.out.println("File size: " + (fileSize/1024)/1024 + " MB.");
 
       byte[] buffer = new byte[1024];
       int incomingBytes;
-      int total = 0;
+
+      long total = 0;
+      long startTime = System.currentTimeMillis() / 1000;
+      long middleTime = startTime;
+
       try {
         FileOutputStream fos = new FileOutputStream("Mortdecai2.mp4");
         do {
           incomingBytes = dis.read(buffer, 0, (int) Math.min(buffer.length, fileSize));
           fos.write(buffer, 0, incomingBytes);
+
+          total += incomingBytes;
+          long totalMB = (total/1024)/1024;
+
+          long currentTime = System.currentTimeMillis()/1000;
+          if((currentTime - middleTime) >= 1) {
+            System.out.println("Downloaded " + totalMB + " MB with speed " + (totalMB*8)/(currentTime - startTime) + "Mb/s");
+            middleTime = currentTime;
+          }
           fileSize -= incomingBytes;
         }while (fileSize > 0 && incomingBytes != -1);
+        long endTime = System.currentTimeMillis();
+        System.out.println("Total time: " + Math.round((endTime - startTime)/1000));
         fos.close();
 
       } catch (IOException ex) {
