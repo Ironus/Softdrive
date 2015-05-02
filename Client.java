@@ -19,8 +19,14 @@ public class Client {
       // "lepsze" strumienie
       DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
       DataInputStream dis = new DataInputStream(socket.getInputStream());
+
+      String path = "./img1.JPG";
+      byte[] pathBytes = path.getBytes("UTF-8");
+
+      dos.writeInt(path.length());
+      dos.write(pathBytes);
+
       int number = dis.readInt();
-      dos.write(110);
       System.out.println(number);
       dis.close();
       dos.close();

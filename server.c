@@ -3,11 +3,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+
 
 enum Bool { False, True };
 
@@ -21,14 +22,32 @@ int writeLine(char* sign) {
 }
 
 int handleConnection(int clientSocket) {
-  long number = htonl(1);
+  long fileSize;
   int pathSize;
-  printf("\tRetrieving pathSize.");
+
+  struct stat fileInformation;
+  FILE *file;
+
+  printf("\tRetrieving pathSize.\n");
   recv(clientSocket, &pathSize, sizeof(int), 0);
-  printf("\t\tPath size: %d", pathSize);
+  pathSize = ntohl(pathSize);
+  printf("\t\tPath size: %d\n", pathSize);
+
   char path[pathSize];
-  recv(clientSocket, %path[], sizeof(path[]), 0);
-  send(clientSocket, &number, sizeof(int), 0);
+  memset(path, 0, pathSize);
+
+  printf("\tRetrieving path.\n");
+  recv(clientSocket, &path, sizeof(path), 0);
+  printf("\t\tPath: \"%s\"\n", path);
+
+  printf("\tReading file information.\n");
+  stat(path, &fileInformation);
+  fileSize = fileInformation.st_size;
+  printf("\t\tFile size: %.2f MB\n", ((double)fileSize/1024)/1024);
+  fileSize = htonl((long)fileSize);
+
+  printf("\tSending file size.\n");
+  send(clientSocket, &fileSize, sizeof(int), 0);
   return 0;
 }
 
@@ -78,8 +97,6 @@ int main(void) {
       exit(0);
     }
     else {
-      printf("\v");
-      writeLine("─");
       printf("Waiting for connection.");
       continue;
     }
