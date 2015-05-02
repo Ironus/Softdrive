@@ -20,14 +20,31 @@ public class Client {
       DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
       DataInputStream dis = new DataInputStream(socket.getInputStream());
 
-      String path = "./img1.JPG";
+      String path = "./Mortdecai.mp4";
       byte[] pathBytes = path.getBytes("UTF-8");
 
       dos.writeInt(path.length());
       dos.write(pathBytes);
 
-      int number = dis.readInt();
-      System.out.println(number);
+      int fileSize = dis.readInt();
+      System.out.println(fileSize);
+
+      byte[] buffer = new byte[1024];
+      int incomingBytes;
+      int total = 0;
+      try {
+        FileOutputStream fos = new FileOutputStream("Mortdecai2.mp4");
+        do {
+          incomingBytes = dis.read(buffer, 0, (int) Math.min(buffer.length, fileSize));
+          fos.write(buffer, 0, incomingBytes);
+          fileSize -= incomingBytes;
+        }while (fileSize > 0 && incomingBytes != -1);
+        fos.close();
+
+      } catch (IOException ex) {
+                // Do exception handling
+      }
+
       dis.close();
       dos.close();
 

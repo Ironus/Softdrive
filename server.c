@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-
+#include <time.h>
 
 enum Bool { False, True };
 
@@ -21,12 +21,46 @@ int writeLine(char* sign) {
   return 0;
 }
 
-int handleConnection(int clientSocket) {
-  long fileSize;
-  int pathSize;
-
+int sendFile(int clientSocket, char path[]) {
   struct stat fileInformation;
   FILE *file;
+
+  printf("\tReading file information.\n");
+  stat(path, &fileInformation);
+  long fileSize = fileInformation.st_size;
+  printf("\t\tFile size: %.2f MB\n", ((double)fileSize/1024)/1024);
+  fileSize = htonl((long)fileSize);
+
+  printf("\tSending file size.\n");
+  send(clientSocket, &fileSize, sizeof(int), 0);
+
+  fileSize = fileInformation.st_size;
+  long totalSent = 0, read = 0, sent = 0;
+  unsigned char buffer[1024];
+
+  printf("\tFile sending.\n");
+  file = fopen(path, "rb");
+
+  time_t start, end;
+  time(&start);
+  while (totalSent < fileSize) {
+    read = fread(buffer, 1, sizeof(buffer), file);
+    sent = send(clientSocket, buffer, read, 0);
+    if (read != sent)
+      break;
+    totalSent = totalSent + sent;
+    time(&end);
+    double totalSentMB = (double)(totalSent / 1024)/1024;
+    double transferSpeed = (totalSentMB * 8.0) / difftime(end, start);
+    printf("\t\tSent %.2f MB with speed %.2f Mb/s\n", totalSentMB, transferSpeed);
+  }
+  printf("\t\tFile has been sent.\n");
+
+  return 0;
+}
+
+int handleConnection(int clientSocket) {
+  int pathSize;
 
   printf("\tRetrieving pathSize.\n");
   recv(clientSocket, &pathSize, sizeof(int), 0);
@@ -40,14 +74,8 @@ int handleConnection(int clientSocket) {
   recv(clientSocket, &path, sizeof(path), 0);
   printf("\t\tPath: \"%s\"\n", path);
 
-  printf("\tReading file information.\n");
-  stat(path, &fileInformation);
-  fileSize = fileInformation.st_size;
-  printf("\t\tFile size: %.2f MB\n", ((double)fileSize/1024)/1024);
-  fileSize = htonl((long)fileSize);
+  sendFile(clientSocket, path);
 
-  printf("\tSending file size.\n");
-  send(clientSocket, &fileSize, sizeof(int), 0);
   return 0;
 }
 
