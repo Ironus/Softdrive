@@ -129,7 +129,7 @@ int main(void) {
       exit(0);
     }
     else {
-      printf("Waiting for connection.");
+      printf("Waiting for connection.\n");
       continue;
     }
   }
