@@ -22,6 +22,12 @@ class FileNode {
     return file.getName().length() > 0 ? file.getName() : file.getPath();
   }
 
+  public boolean isDirectory() {
+    if(file.isDirectory())
+      return true;
+    return false;
+  }
+
   public boolean expand(DefaultMutableTreeNode parent) {
     DefaultMutableTreeNode flag = (DefaultMutableTreeNode)parent.getFirstChild();
 
@@ -43,8 +49,22 @@ class FileNode {
     for (int i = 0; i < files.length; i++) {
       File f = files[i];
 
-      if (!(f.isDirectory()))
+      if (!(f.isDirectory())){
+        FileNode newNode = new FileNode(f);
+
+        boolean isAdded = false;
+        for (int j = 0; j < vector.size(); j++) {
+          FileNode nd = (FileNode)vector.elementAt(j);
+          if (newNode.compareTo(nd) < 0) {
+            vector.insertElementAt(newNode, j);
+            isAdded = true;
+            break;
+          }
+        }
+        if (!isAdded)
+          vector.addElement(newNode);
         continue;
+      }
 
       FileNode newNode = new FileNode(f);
 
@@ -63,8 +83,15 @@ class FileNode {
 
     for (int j = 0; j < vector.size(); j++) {
       FileNode nd = (FileNode)vector.elementAt(j);
-      IconData idata = new IconData(FileTreePanel.folderCloseIcon, FileTreePanel.folderOpenIcon, nd);
-      DefaultMutableTreeNode node = new DefaultMutableTreeNode(idata);
+      IconData dirData = new IconData(FileTreePanel.folderCloseIcon, FileTreePanel.folderOpenIcon, nd);
+      IconData fileData = new IconData(FileTreePanel.fileIcon, nd);
+
+      DefaultMutableTreeNode node;
+      if(vector.elementAt(j).isDirectory())
+        node = new DefaultMutableTreeNode(dirData);
+      else
+        node = new DefaultMutableTreeNode(fileData);
+
       parent.add(node);
 
       if (nd.hasSubDirs())

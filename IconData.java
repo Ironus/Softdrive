@@ -8,8 +8,8 @@ import javax.swing.tree.*;
 import javax.swing.event.*;
 
 class IconData {
-  protected Icon   icon;
-  protected Icon   expandedIcon;
+  protected Icon icon;
+  protected Icon expandedIcon;
   protected Object data;
 
   public IconData(Icon _icon, Object _data) {

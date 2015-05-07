@@ -15,6 +15,7 @@ public class FileTreePanel extends JPanel {
   public static final ImageIcon hardDriveIcon = new ImageIcon("./images/hardDriveIcon.png");
   public static final ImageIcon folderCloseIcon = new ImageIcon("./images/folderCloseIcon.png");
   public static final ImageIcon folderOpenIcon = new ImageIcon("./images/folderOpenIcon.png");
+  public static final ImageIcon fileIcon = new ImageIcon("./images/fileIcon.png");
 
   private JTree fileTree;
   private DefaultTreeModel fileTreeModel;
