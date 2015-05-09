@@ -54,7 +54,7 @@ class FileNode {
 
         boolean isAdded = false;
         for (int j = 0; j < vector.size(); j++) {
-          FileNode nd = (FileNode)vector.elementAt(j);
+          FileNode nd = /*(FileNode)*/vector.elementAt(j);
           if (newNode.compareTo(nd) < 0) {
             vector.insertElementAt(newNode, j);
             isAdded = true;
@@ -70,7 +70,7 @@ class FileNode {
 
       boolean isAdded = false;
       for (int j = 0; j < vector.size(); j++) {
-        FileNode nd = (FileNode)vector.elementAt(j);
+        FileNode nd = /*(FileNode)*/vector.elementAt(j);
         if (newNode.compareTo(nd) < 0) {
           vector.insertElementAt(newNode, j);
           isAdded = true;
@@ -82,7 +82,7 @@ class FileNode {
     }
 
     for (int j = 0; j < vector.size(); j++) {
-      FileNode nd = (FileNode)vector.elementAt(j);
+      FileNode nd = /*(FileNode)*/vector.elementAt(j);
       IconData dirData = new IconData(FileTreePanel.folderCloseIcon, FileTreePanel.folderOpenIcon, nd);
       IconData fileData = new IconData(FileTreePanel.fileIcon, nd);
 

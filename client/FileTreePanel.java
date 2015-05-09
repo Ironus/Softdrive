@@ -4,6 +4,8 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.tree.*;
 import javax.swing.event.*;
+import javax.swing.BorderFactory;
+import javax.swing.border.*;
 import java.io.*;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,7 +25,9 @@ public class FileTreePanel extends JPanel {
   public FileTreePanel() {
     createFileTree();
     setLayout(new BorderLayout());
-
+    Border innerBorder = BorderFactory.createTitledBorder("Your files");
+    Border outerBorder = BorderFactory.createEmptyBorder(5, 5, 5, 5);
+    setBorder(BorderFactory.createCompoundBorder(outerBorder, innerBorder));
     add(new JScrollPane(fileTree), BorderLayout.CENTER);
   }
 

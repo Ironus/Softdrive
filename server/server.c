@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <time.h>
+#include "tinydir.h"
 
 enum Bool { False, True };
 
@@ -65,21 +66,51 @@ int sendFile(int clientSocket, char path[]) {
 
 int handleConnection(int clientSocket) {
   int pathSize;
+  short connectionClosed = False;
+  int action;
+  char actualPath[] = "./files";
+  while(!connectionClosed) {
+    printf("\tRetrieving action demand.\n");
+    recv(clientSocket, &action, sizeof(int), 0);
 
-  printf("\tRetrieving pathSize.\n");
-  recv(clientSocket, &pathSize, sizeof(int), 0);
-  pathSize = ntohl(pathSize);
-  printf("\t\tPath size: %d\n", pathSize);
+    switch(action) {
+      case 1:
+        printf("\tFile list demand.");
+        tinydir_dir dir;
+        tinydir_open_sorted(&dir, actualPath);
 
-  char path[pathSize];
-  memset(path, 0, pathSize);
+        int i, isDirectiory, countFiles = dir.n_files;
+        char fileName[];
 
-  printf("\tRetrieving path.\n");
-  recv(clientSocket, &path, sizeof(path), 0);
-  printf("\t\tPath: \"%s\"\n", path);
+        send(clientSocket, &countFiles, sizeof(int), 0);
 
-  sendFile(clientSocket, path);
+        for (i = 0; i < dir.n_files; i++) {
+          tinydir_file file;
+          tinydir_readfile_n(&dir, &file, i);
 
+          isDirectory = file.is_dir;
+          fileName = file.name;
+          send(clientSocket, &isDirectory, sizeof(int));
+          send(clientSocket, &fileName, sizeof(fileName));
+        }
+
+        tinydir_close(&dir);
+        break;
+    }
+    /*printf("\tRetrieving pathSize.\n");
+    recv(clientSocket, &pathSize, sizeof(int), 0);
+    pathSize = ntohl(pathSize);
+    printf("\t\tPath size: %d\n", pathSize);
+
+    char path[pathSize];
+    memset(path, 0, pathSize);
+
+    printf("\tRetrieving path.\n");
+    recv(clientSocket, &path, sizeof(path), 0);
+    printf("\t\tPath: \"%s\"\n", path);
+
+    sendFile(clientSocket, path);*/
+  }
   return 0;
 }
 

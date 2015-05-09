@@ -17,7 +17,7 @@ public class ConnectionPanel extends JPanel{
     connectButton = new JButton("Connect");
     connectButton.addActionListener(new ActionListener(){
       public void actionPerformed(ActionEvent arg0) {
-
+        ConnectionHandler connectionHandler = new ConnectionHandler(ipAddressTextArea.getText(), portTextArea.getText());
       }
     });
 
