@@ -13,6 +13,16 @@
 
 enum Bool { False, True };
 
+int arraySize(char *ptr) {
+    int offset = 0;
+    int count = 0;
+    while (*(ptr + offset) != '\0') {
+    ++count;
+    ++offset;
+  }
+  return count;
+}
+
 int writeLine(char* sign) {
   int lineCounter = 0;
   for(lineCounter; lineCounter < 80; lineCounter = lineCounter + 1) {
@@ -72,31 +82,39 @@ int handleConnection(int clientSocket) {
   while(!connectionClosed) {
     printf("\tRetrieving action demand.\n");
     recv(clientSocket, &action, sizeof(int), 0);
+    action = ntohl(action);
 
     switch(action) {
       case 1:
-        printf("\tFile list demand.");
+        printf("\tFile list demand.\n");
         tinydir_dir dir;
         tinydir_open_sorted(&dir, actualPath);
 
-        int i, isDirectiory, countFiles = dir.n_files;
-        char fileName[];
+        int i, nameLength, isDirectory, countFiles = dir.n_files;
 
+        countFiles = htonl(countFiles);
         send(clientSocket, &countFiles, sizeof(int), 0);
-
         for (i = 0; i < dir.n_files; i++) {
           tinydir_file file;
           tinydir_readfile_n(&dir, &file, i);
-
           isDirectory = file.is_dir;
-          fileName = file.name;
-          send(clientSocket, &isDirectory, sizeof(int));
-          send(clientSocket, &fileName, sizeof(fileName));
+          nameLength = arraySize(&file.name[0]);
+          char tmp[nameLength];
+
+          printf("\t%d\t%d\t%s\n", isDirectory, nameLength, file.name);
+
+          isDirectory = htonl(isDirectory);
+          nameLength = htonl(nameLength);
+
+          send(clientSocket, &isDirectory, sizeof(int), 0);
+          send(clientSocket, &nameLength, sizeof(int), 0);
+          send(clientSocket, &file.name, sizeof(tmp), 0);
         }
 
         tinydir_close(&dir);
         break;
     }
+    connectionClosed = 1;
     /*printf("\tRetrieving pathSize.\n");
     recv(clientSocket, &pathSize, sizeof(int), 0);
     pathSize = ntohl(pathSize);

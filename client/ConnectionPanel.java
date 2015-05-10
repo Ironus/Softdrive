@@ -8,7 +8,11 @@ public class ConnectionPanel extends JPanel{
   private JTextField portTextArea;
   private JButton connectButton;
 
-  public ConnectionPanel() {
+  public ConnectionHandler connectionHandler;
+  public ServerFilesPanel serverFilesPanel;
+
+  public ConnectionPanel(ServerFilesPanel _serverFilesPanel) {
+    serverFilesPanel = _serverFilesPanel;
     setLayout(new FlowLayout());
 
     ipAddressTextArea = new JTextField(15);
@@ -17,12 +21,17 @@ public class ConnectionPanel extends JPanel{
     connectButton = new JButton("Connect");
     connectButton.addActionListener(new ActionListener(){
       public void actionPerformed(ActionEvent arg0) {
-        ConnectionHandler connectionHandler = new ConnectionHandler(ipAddressTextArea.getText(), portTextArea.getText());
+        connectionHandler = new ConnectionHandler(serverFilesPanel, ipAddressTextArea.getText(), portTextArea.getText());
       }
     });
 
     add(ipAddressTextArea);
     add(portTextArea);
     add(connectButton);
+  }
+
+  public void closeConnection() {
+    if(connectionHandler != null)
+      connectionHandler.closeConnection();
   }
 }

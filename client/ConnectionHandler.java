@@ -5,6 +5,7 @@ import java.util.Scanner;
 import javax.swing.*;
 
 public class ConnectionHandler {
+  private ServerFilesPanel serverFilesPanel;
   private InetAddress address;
   private int port;
 
@@ -12,8 +13,9 @@ public class ConnectionHandler {
   private DataOutputStream dos;
   private DataInputStream dis;
 
-  public ConnectionHandler(String ipAddress, String port) {
+  public ConnectionHandler(ServerFilesPanel _serverFilesPanel, String ipAddress, String port) {
     try {
+      serverFilesPanel = _serverFilesPanel;
       address = InetAddress.getByName(ipAddress);
       this.port = Integer.parseInt(port);
       connectionHandle();
@@ -47,10 +49,31 @@ public class ConnectionHandler {
   private void getCatalogueList() {
     try {
       dos.writeInt(1); // 1 - catalogue tree
-      int countFiles = dis.readInt();
+      int countFiles = dis.readInt(), fileNameLength;
+      long isDirectory;
+      byte[] fileName;
+      String fileNameString;
+      String dirToIgnore1 = new String(".");
+      String dirToIgnore2 = new String("..");
       for(int i = 0 ; i < countFiles; i++) {
+        isDirectory = dis.readInt();
+        fileNameLength = dis.readInt();
+        fileName = new byte[fileNameLength];
+        dis.read(fileName, 0, fileName.length);
 
+        fileNameString = new String(fileName);
+        if(!fileNameString.equals(dirToIgnore1) && !fileNameString.equals(dirToIgnore2))
+          serverFilesPanel.addToServerFilesList(new String(fileName), isDirectory);
       }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+  public void closeConnection() {
+    try {
+        dos.close();
+        dis.close();
+        socket.close();
     } catch (Exception e) {
       e.printStackTrace();
     }

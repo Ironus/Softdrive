@@ -13,7 +13,7 @@ public class ClientGUI extends JFrame {
 
   private ConnectionPanel connectionPanel;
   private FileTreePanel fileTreePanel;
-  private ServerFilesPanel serverfilesPanel;
+  public ServerFilesPanel serverFilesPanel;
 
   private JPanel filesPanel;
 
@@ -25,9 +25,9 @@ public class ClientGUI extends JFrame {
   private void initGUI() {
     setLayout(new BorderLayout());
 
-    connectionPanel = new ConnectionPanel();
+    serverFilesPanel = new ServerFilesPanel();
+    connectionPanel = new ConnectionPanel(serverFilesPanel);
     fileTreePanel = new FileTreePanel();
-    serverfilesPanel = new ServerFilesPanel();
 
     filesPanel = new JPanel();
     filesPanel.setLayout(new GridBagLayout());
@@ -42,7 +42,7 @@ public class ClientGUI extends JFrame {
     filesPanel.add(fileTreePanel, gc);
 
     gc.gridx = 1;
-    filesPanel.add(serverfilesPanel, gc);
+    filesPanel.add(serverFilesPanel, gc);
 
     add(connectionPanel, BorderLayout.PAGE_START);
     add(filesPanel, BorderLayout.CENTER);
@@ -52,7 +52,17 @@ public class ClientGUI extends JFrame {
     setSize(getMinimumSize());
 
     setLocationRelativeTo(null);
-    setDefaultCloseOperation(EXIT_ON_CLOSE);
+    setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+
+    addWindowListener(new WindowAdapter() {
+      public void windowClosing(WindowEvent e) {
+        connectionPanel.closeConnection();
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setVisible(false);
+        dispose();
+      }
+    });
+
     setVisible(true);
   }
 }
