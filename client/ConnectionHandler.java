@@ -1,6 +1,8 @@
+//import java.awt.*;
 import java.io.*;
 import java.net.*;
 import java.text.*;
+import java.util.*;
 import java.util.Scanner;
 import javax.swing.*;
 
@@ -13,10 +15,14 @@ public class ConnectionHandler {
   private DataOutputStream dos;
   private DataInputStream dis;
 
+  private ProgressDialog progressDialog;
+  private static int fileSize;
+
   public boolean isConnected;
 
   public ConnectionHandler(ServerFilesPanel _serverFilesPanel, String ipAddress, String port) {
     isConnected = false;
+    progressDialog = new ProgressDialog();
 
     try {
       serverFilesPanel = _serverFilesPanel;
@@ -83,7 +89,6 @@ public class ConnectionHandler {
   }
 
   public void downloadFile(String fileName, String pathToSave) {
-    System.out.println(pathToSave + "\\" + fileName);
     try {
       String fileDw = "fileDw";
       dos.write(fileDw.getBytes("UTF-8"));
@@ -92,7 +97,6 @@ public class ConnectionHandler {
     }
 
     DecimalFormat twoDecimalPlaces = new DecimalFormat("##.00");
-    long fileSize = 0;
 
     try {
       dos.write(fileName.getBytes("UTF-8"));
@@ -105,41 +109,60 @@ public class ConnectionHandler {
     } catch(Exception e) {
       e.printStackTrace();
     }
+    progressDialog.setTitle("Downloading...");
+    progressDialog.setMaximum(fileSize);
+    progressDialog.setVisible(true);
 
-    int incomingBytes = 0;
-    byte[] buffer = new byte[1024];
-    long total = 0;
-    double totalMB = 0;
-    long currentTime;
-    long startTime = System.currentTimeMillis() / 1000;
-    long middleTime = startTime;
-    double downloadSpeed;
-    try {
-      FileOutputStream fos = new FileOutputStream(pathToSave + "\\" + fileName);
-      do {
-        incomingBytes = dis.read(buffer, 0, (int) Math.min(buffer.length, fileSize));
-        fos.write(buffer, 0, incomingBytes);
-
-        total += incomingBytes;
-        totalMB = (double)(total/1024)/1024;
-
-        currentTime = System.currentTimeMillis()/1000;
-        if((currentTime - middleTime) >= 3) {
-          downloadSpeed = (totalMB*8)/(currentTime - startTime);
-          System.out.println("Downloaded " + twoDecimalPlaces.format(totalMB)
-            + " MB. Speed " + twoDecimalPlaces.format(downloadSpeed) + "Mb/s.");
-          middleTime = currentTime;
+    SwingWorker<Void, Integer> worker = new SwingWorker<Void, Integer>() {
+      protected void done() {
+        try {
+          progressDialog.setVisible(false);
+        } catch(Exception e) {
+          e.printStackTrace();
         }
-        fileSize -= incomingBytes;
-      } while (fileSize > 0 && incomingBytes != -1);
-      long endTime = System.currentTimeMillis() / 1000;
-      downloadSpeed = (totalMB*8)/(endTime - startTime);
-      System.out.println("Downloaded. Total time: " + Math.round((endTime - startTime))
-        + "sec. Average speed " + twoDecimalPlaces.format(downloadSpeed) + "Mb/s.");
-      fos.close();
-    } catch (IOException ex) {
-        ex.printStackTrace();
-    }
+      }
+
+      protected void process(List<Integer> received) {
+        int total = received.get(received.size() - 1);
+
+        progressDialog.setValue(total);
+      }
+
+      protected Void doInBackground() throws Exception {
+        try {
+          int incomingBytes = 0;
+          byte[] buffer = new byte[1024];
+          int total = 0;
+          double totalMB = 0;
+          long currentTime;
+          long startTime = System.currentTimeMillis() / 1000;
+          long middleTime = startTime;
+          double downloadSpeed;
+
+          FileOutputStream fos = new FileOutputStream(pathToSave + "\\" + fileName);
+          do {
+            incomingBytes = dis.read(buffer, 0, (int) Math.min(buffer.length, ConnectionHandler.fileSize));
+            fos.write(buffer, 0, incomingBytes);
+
+            total += incomingBytes;
+            totalMB = (double)(total/1024)/1024;
+
+            currentTime = System.currentTimeMillis()/1000;
+            fileSize -= incomingBytes;
+            publish(total);
+          } while (fileSize > 0 && incomingBytes != -1);
+          long endTime = System.currentTimeMillis() / 1000;
+          downloadSpeed = (totalMB*8)/(endTime - startTime);
+          System.out.println("Downloaded. Total time: " + Math.round((endTime - startTime))
+            + "sec. Average speed " + twoDecimalPlaces.format(downloadSpeed) + "Mb/s.");
+          fos.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+      }
+    };
+    worker.execute();
   }
 
   public void closeConnection() {
