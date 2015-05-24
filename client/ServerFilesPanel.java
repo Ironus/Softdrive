@@ -20,17 +20,57 @@ public class ServerFilesPanel extends JPanel {
   private ServerFilesCellRenderer listRenderer;
   private ServerFilesListEntry defaultListElement;
 
-  public ServerFilesPanel() {
+  private ConnectionPanel connectionPanel;
+
+  public ServerFilesPanel(ConnectionPanel _connectionPanel) {
+    connectionPanel = _connectionPanel;
     setLayout(new BorderLayout());
 
     fileList = new JList<ServerFilesListEntry>();
     listModel = new DefaultListModel<ServerFilesListEntry>();
     listRenderer = new ServerFilesCellRenderer();
-    defaultListElement = new ServerFilesListEntry("File names will be shown here", FileTreePanel.computerIcon);
+    defaultListElement = new ServerFilesListEntry("File names will be shown here", true, FileTreePanel.computerIcon);
 
     fileList.setModel(listModel);
     fileList.setCellRenderer(listRenderer);
     listModel.addElement(defaultListElement);
+
+    fileList.addListSelectionListener(new ListSelectionListener() {
+      public void valueChanged(ListSelectionEvent e) {
+        if(e.getValueIsAdjusting()) {
+          ServerFilesListEntry selectedListElement = fileList.getSelectedValue();
+
+          Rectangle bounds = fileList.getCellBounds(fileList.getSelectedIndex(), 0);
+          int x = bounds.x;
+          int y = bounds.y;
+
+          JPopupMenu popup = new JPopupMenu();
+
+          JMenuItem downloadFileMenuItem = new JMenuItem("Download");
+          downloadFileMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+              connectionPanel.connectionHandler.downloadFile(selectedListElement.getValue());
+            }
+          });
+          JMenuItem openFolderMenuItem = new JMenuItem("Open");
+          openFolderMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+              connectionPanel.connectionHandler.openFolder(selectedListElement.getValue());
+            }
+          });
+
+          if(!selectedListElement.isDirectory()) {
+            popup.add(downloadFileMenuItem);
+          }
+          else {
+            if(selectedListElement.getValue() != "File names will be shown here")
+              popup.add(openFolderMenuItem);
+          }
+          popup.show(ServerFilesPanel.this, x, y);
+          //selectedListElement.isDirectory();
+        }
+      }
+    });
 
     Border innerBorder = BorderFactory.createTitledBorder("Server files");
     Border outerBorder = BorderFactory.createEmptyBorder(5, 0, 5, 5);
@@ -41,15 +81,15 @@ public class ServerFilesPanel extends JPanel {
   public void addToServerFilesList(String fileName, long isDirectory) {
     if(isDirectory > 0) {
       if(listModel.firstElement() != defaultListElement)
-        listModel.addElement(new ServerFilesListEntry(fileName, FileTreePanel.folderCloseIcon));
+        listModel.addElement(new ServerFilesListEntry(fileName, true, FileTreePanel.folderCloseIcon));
       else
-        listModel.setElementAt(new ServerFilesListEntry(fileName, FileTreePanel.folderCloseIcon), 0);
+        listModel.setElementAt(new ServerFilesListEntry(fileName, true, FileTreePanel.folderCloseIcon), 0);
     }
     else {
       if(listModel.firstElement() != defaultListElement)
-        listModel.addElement(new ServerFilesListEntry(fileName, FileTreePanel.fileIcon));
+        listModel.addElement(new ServerFilesListEntry(fileName, false, FileTreePanel.fileIcon));
       else
-        listModel.setElementAt(new ServerFilesListEntry(fileName, FileTreePanel.folderCloseIcon), 0);
+        listModel.setElementAt(new ServerFilesListEntry(fileName, true, FileTreePanel.folderCloseIcon), 0);
     }
   }
 }

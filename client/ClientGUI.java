@@ -25,9 +25,9 @@ public class ClientGUI extends JFrame {
   private void initGUI() {
     setLayout(new BorderLayout());
 
-    serverFilesPanel = new ServerFilesPanel();
+    serverFilesPanel = new ServerFilesPanel(connectionPanel);
     connectionPanel = new ConnectionPanel(serverFilesPanel);
-    fileTreePanel = new FileTreePanel();
+    fileTreePanel = new FileTreePanel(connectionPanel);
 
     filesPanel = new JPanel();
     filesPanel.setLayout(new GridBagLayout());

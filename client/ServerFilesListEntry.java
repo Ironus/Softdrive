@@ -6,9 +6,11 @@ import java.awt.*;
 public class ServerFilesListEntry {
    private String value;
    private ImageIcon icon;
+   private boolean directory;
 
-   public ServerFilesListEntry(String _value, ImageIcon _icon) {
+   public ServerFilesListEntry(String _value, boolean _directory, ImageIcon _icon) {
       value = _value;
+      directory = _directory;
       icon = _icon;
    }
 
@@ -22,5 +24,9 @@ public class ServerFilesListEntry {
 
    public String toString() {
       return value;
+   }
+
+   public boolean isDirectory() {
+     return directory;
    }
 }

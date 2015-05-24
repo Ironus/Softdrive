@@ -21,8 +21,10 @@ public class FileTreePanel extends JPanel {
 
   private JTree fileTree;
   private DefaultTreeModel fileTreeModel;
+  private ConnectionPanel connectionPanel;
 
-  public FileTreePanel() {
+  public FileTreePanel(ConnectionPanel _connectionPanel) {
+    connectionPanel = _connectionPanel;
     createFileTree();
     setLayout(new BorderLayout());
     Border innerBorder = BorderFactory.createTitledBorder("Your files");
@@ -77,8 +79,21 @@ public class FileTreePanel extends JPanel {
       public void valueChanged(TreeSelectionEvent event) {
         DefaultMutableTreeNode node = getTreeNode(event.getPath());
         FileNode fileNode = getFileNode(node);
-        if (fileNode != null) {
-          //display.setText(fileNode.getFile().getAbsolutePath());
+        if (fileNode != null && !fileNode.isDirectory()) {
+          Rectangle bounds = fileTree.getPathBounds(event.getPath());
+          int x = bounds.x;
+          int y = bounds.y;
+
+          JPopupMenu popup = new JPopupMenu();
+
+          JMenuItem uploadFileMenuItem = new JMenuItem("Upload");
+          uploadFileMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+              connectionPanel.connectionHandler.sendFile(fileNode.getFileAbsolutePath(), fileNode.toString());
+            }
+          });
+          popup.add(uploadFileMenuItem);
+          popup.show(FileTreePanel.this, x, y);
         }
         else {
           //display.setText("");

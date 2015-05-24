@@ -129,4 +129,8 @@ class FileNode {
       return null;
     }
   }
+
+  public String getFileAbsolutePath() {
+    return file.getAbsolutePath();
+  }
 }

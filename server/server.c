@@ -32,6 +32,11 @@ int writeLine(char* sign) {
   return 0;
 }
 
+int getFile(int clientSocket, char actualPath[], char fileName[]) {
+  printf("\tRetrieving file %s\n", fileName);
+  return 0;
+}
+
 int sendFile(int clientSocket, char path[]) {
   struct stat fileInformation;
   FILE *file;
@@ -77,57 +82,72 @@ int sendFile(int clientSocket, char path[]) {
 int handleConnection(int clientSocket) {
   int pathSize;
   short connectionClosed = False;
-  int action;
+  char action[6];
   char actualPath[] = "./files";
   while(!connectionClosed) {
-    printf("\tRetrieving action demand.\n");
-    recv(clientSocket, &action, sizeof(int), 0);
-    action = ntohl(action);
-
-    switch(action) {
-      case 1:
-        printf("\tFile list demand.\n");
-        tinydir_dir dir;
-        tinydir_open_sorted(&dir, actualPath);
-
-        int i, nameLength, isDirectory, countFiles = dir.n_files;
-
-        countFiles = htonl(countFiles);
-        send(clientSocket, &countFiles, sizeof(int), 0);
-        for (i = 0; i < dir.n_files; i++) {
-          tinydir_file file;
-          tinydir_readfile_n(&dir, &file, i);
-          isDirectory = file.is_dir;
-          nameLength = arraySize(&file.name[0]);
-          char tmp[nameLength];
-
-          printf("\t%d\t%d\t%s\n", isDirectory, nameLength, file.name);
-
-          isDirectory = htonl(isDirectory);
-          nameLength = htonl(nameLength);
-
-          send(clientSocket, &isDirectory, sizeof(int), 0);
-          send(clientSocket, &nameLength, sizeof(int), 0);
-          send(clientSocket, &file.name, sizeof(tmp), 0);
-        }
-
-        tinydir_close(&dir);
-        break;
+    memset(action, 0, sizeof(action));
+    if(recv(clientSocket, &action, sizeof(action), 0) == -1) {
+      printf("\tReceive error.\n");
+      continue;
     }
-    connectionClosed = 1;
-    /*printf("\tRetrieving pathSize.\n");
-    recv(clientSocket, &pathSize, sizeof(int), 0);
-    pathSize = ntohl(pathSize);
-    printf("\t\tPath size: %d\n", pathSize);
+    printf("%s\n", action);
 
-    char path[pathSize];
-    memset(path, 0, pathSize);
+    if(strcmp(action, "endCon") == 0) {
+      connectionClosed = 1;
+    }
+    else if(strcmp(action, "fileLi") == 0) {
+      printf("\tFile list demand.\n");
+      tinydir_dir dir;
+      tinydir_open_sorted(&dir, actualPath);
 
-    printf("\tRetrieving path.\n");
-    recv(clientSocket, &path, sizeof(path), 0);
-    printf("\t\tPath: \"%s\"\n", path);
+      int i, nameLength, isDirectory, countFiles = dir.n_files;
 
-    sendFile(clientSocket, path);*/
+      countFiles = htonl(countFiles);
+      send(clientSocket, &countFiles, sizeof(int), 0);
+      for (i = 0; i < dir.n_files; i++) {
+        tinydir_file file;
+        tinydir_readfile_n(&dir, &file, i);
+        isDirectory = file.is_dir;
+        nameLength = arraySize(&file.name[0]);
+        char tmp[nameLength];
+
+        printf("\t%d\t%d\t%s\n", isDirectory, nameLength, file.name);
+
+        isDirectory = htonl(isDirectory);
+        nameLength = htonl(nameLength);
+
+        send(clientSocket, &isDirectory, sizeof(int), 0);
+        send(clientSocket, &nameLength, sizeof(int), 0);
+        send(clientSocket, &file.name, sizeof(tmp), 0);
+      }
+      tinydir_close(&dir);
+    }
+    else if(strcmp(action, "fileUp") == 0) {
+        printf("\tFile upload request.\n");
+
+        char fileName[512];
+        memset(fileName, 0, sizeof(fileName));
+        if(recv(clientSocket, &fileName, sizeof(fileName), 0) == -1) {
+          printf("\tFile name retrieve error.\n");
+          continue;
+        }
+        getFile(clientSocket, actualPath, fileName);
+    }
+    else if(strcmp(action, "fileDw") == 0) {
+      printf("\tFile download request.\n");
+
+      char path[512];
+      memset(path, 0, sizeof(path));
+
+      printf("\tRetrieving path.\n");
+      recv(clientSocket, &path, sizeof(path), 0);
+      printf("\t\tPath: \"%s\"\n", path);
+
+      sendFile(clientSocket, path);
+    }
+    else {
+      printf("\tDemand error.\n");
+    }
   }
   return 0;
 }

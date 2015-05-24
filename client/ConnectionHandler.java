@@ -13,7 +13,10 @@ public class ConnectionHandler {
   private DataOutputStream dos;
   private DataInputStream dis;
 
+  public boolean isConnected;
+
   public ConnectionHandler(ServerFilesPanel _serverFilesPanel, String ipAddress, String port) {
+    isConnected = false;
     try {
       serverFilesPanel = _serverFilesPanel;
       address = InetAddress.getByName(ipAddress);
@@ -23,6 +26,7 @@ public class ConnectionHandler {
         e.printStackTrace();
     }
   }
+
   private void connectionHandle() {
     try {
       socket = new Socket(address, port);
@@ -31,7 +35,7 @@ public class ConnectionHandler {
       dis = new DataInputStream(socket.getInputStream());
 
       getCatalogueList();
-
+      isConnected = true;
       /*//System.out.print("File to download: ");
       //String path = keyboardInput.nextLine();
       downloadFile("./Mortdecai.mp4", dos, dis);
@@ -46,9 +50,12 @@ public class ConnectionHandler {
       e.printStackTrace();
     }
   }
+
   private void getCatalogueList() {
     try {
-      dos.writeInt(1); // 1 - catalogue tree
+      String fileLi = "fileLi";
+      dos.write(fileLi.getBytes("UTF-8"));
+
       int countFiles = dis.readInt(), fileNameLength;
       long isDirectory;
       byte[] fileName;
@@ -69,11 +76,32 @@ public class ConnectionHandler {
       e.printStackTrace();
     }
   }
+
+  public void openFolder(String folderName) {
+    
+  }
+
+  public void sendFile(String path, String fileName) {
+    try{
+      String fileUp = "fileUp";
+      dos.write(fileUp.getBytes("UTF-8"));
+      dos.write(fileName.getBytes("UTF-8"));
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  public void downloadFile(String fileName) {
+
+  }
+
   public void closeConnection() {
     try {
-        dos.close();
-        dis.close();
-        socket.close();
+      String endCon = "endCon";
+      dos.write(endCon.getBytes("UTF-8"));
+      dos.close();
+      dis.close();
+      socket.close();
     } catch (Exception e) {
       e.printStackTrace();
     }
