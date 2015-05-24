@@ -17,6 +17,7 @@ public class ConnectionHandler {
 
   public ConnectionHandler(ServerFilesPanel _serverFilesPanel, String ipAddress, String port) {
     isConnected = false;
+
     try {
       serverFilesPanel = _serverFilesPanel;
       address = InetAddress.getByName(ipAddress);
@@ -36,16 +37,6 @@ public class ConnectionHandler {
 
       getCatalogueList();
       isConnected = true;
-      /*//System.out.print("File to download: ");
-      //String path = keyboardInput.nextLine();
-      downloadFile("./Mortdecai.mp4", dos, dis);
-
-      System.out.println("Closing streams.");
-      dis.close();
-      dos.close();
-
-      System.out.println("Closing connection.");
-      socket.close();*/
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -78,7 +69,7 @@ public class ConnectionHandler {
   }
 
   public void openFolder(String folderName) {
-    
+
   }
 
   public void sendFile(String path, String fileName) {
@@ -91,8 +82,64 @@ public class ConnectionHandler {
     }
   }
 
-  public void downloadFile(String fileName) {
+  public void downloadFile(String fileName, String pathToSave) {
+    System.out.println(pathToSave + "\\" + fileName);
+    try {
+      String fileDw = "fileDw";
+      dos.write(fileDw.getBytes("UTF-8"));
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
 
+    DecimalFormat twoDecimalPlaces = new DecimalFormat("##.00");
+    long fileSize = 0;
+
+    try {
+      dos.write(fileName.getBytes("UTF-8"));
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
+
+    try {
+      fileSize = dis.readInt();
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
+
+    int incomingBytes = 0;
+    byte[] buffer = new byte[1024];
+    long total = 0;
+    double totalMB = 0;
+    long currentTime;
+    long startTime = System.currentTimeMillis() / 1000;
+    long middleTime = startTime;
+    double downloadSpeed;
+    try {
+      FileOutputStream fos = new FileOutputStream(pathToSave + "\\" + fileName);
+      do {
+        incomingBytes = dis.read(buffer, 0, (int) Math.min(buffer.length, fileSize));
+        fos.write(buffer, 0, incomingBytes);
+
+        total += incomingBytes;
+        totalMB = (double)(total/1024)/1024;
+
+        currentTime = System.currentTimeMillis()/1000;
+        if((currentTime - middleTime) >= 3) {
+          downloadSpeed = (totalMB*8)/(currentTime - startTime);
+          System.out.println("Downloaded " + twoDecimalPlaces.format(totalMB)
+            + " MB. Speed " + twoDecimalPlaces.format(downloadSpeed) + "Mb/s.");
+          middleTime = currentTime;
+        }
+        fileSize -= incomingBytes;
+      } while (fileSize > 0 && incomingBytes != -1);
+      long endTime = System.currentTimeMillis() / 1000;
+      downloadSpeed = (totalMB*8)/(endTime - startTime);
+      System.out.println("Downloaded. Total time: " + Math.round((endTime - startTime))
+        + "sec. Average speed " + twoDecimalPlaces.format(downloadSpeed) + "Mb/s.");
+      fos.close();
+    } catch (IOException ex) {
+        ex.printStackTrace();
+    }
   }
 
   public void closeConnection() {

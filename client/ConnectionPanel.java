@@ -8,7 +8,7 @@ public class ConnectionPanel extends JPanel{
   private JTextField portTextArea;
   private JButton connectButton;
 
-  public ConnectionHandler connectionHandler;
+  public static ConnectionHandler connectionHandler;
   public ServerFilesPanel serverFilesPanel;
 
   public ConnectionPanel(ServerFilesPanel _serverFilesPanel) {

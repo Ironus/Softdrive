@@ -20,10 +20,14 @@ public class ServerFilesPanel extends JPanel {
   private ServerFilesCellRenderer listRenderer;
   private ServerFilesListEntry defaultListElement;
 
-  private ConnectionPanel connectionPanel;
+  private JFileChooser fileChooser;
 
-  public ServerFilesPanel(ConnectionPanel _connectionPanel) {
-    connectionPanel = _connectionPanel;
+  private ConnectionHandler connectionHandler;
+
+  public ServerFilesPanel() {
+    fileChooser = new JFileChooser();
+    fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
     setLayout(new BorderLayout());
 
     fileList = new JList<ServerFilesListEntry>();
@@ -37,10 +41,11 @@ public class ServerFilesPanel extends JPanel {
 
     fileList.addListSelectionListener(new ListSelectionListener() {
       public void valueChanged(ListSelectionEvent e) {
+        connectionHandler = ConnectionPanel.connectionHandler;
         if(e.getValueIsAdjusting()) {
           ServerFilesListEntry selectedListElement = fileList.getSelectedValue();
 
-          Rectangle bounds = fileList.getCellBounds(fileList.getSelectedIndex(), 0);
+          Rectangle bounds = fileList.getCellBounds(0, fileList.getSelectedIndex());
           int x = bounds.x;
           int y = bounds.y;
 
@@ -49,13 +54,18 @@ public class ServerFilesPanel extends JPanel {
           JMenuItem downloadFileMenuItem = new JMenuItem("Download");
           downloadFileMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-              connectionPanel.connectionHandler.downloadFile(selectedListElement.getValue());
+              if(fileChooser.showSaveDialog(ServerFilesPanel.this) == JFileChooser.APPROVE_OPTION) {
+                String fileName = selectedListElement.getValue();
+                String pathToSave = fileChooser.getSelectedFile().getAbsolutePath();
+                connectionHandler.downloadFile(fileName, pathToSave);
+              }
             }
           });
           JMenuItem openFolderMenuItem = new JMenuItem("Open");
           openFolderMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-              connectionPanel.connectionHandler.openFolder(selectedListElement.getValue());
+
+              connectionHandler.openFolder(selectedListElement.getValue());
             }
           });
 
@@ -67,7 +77,6 @@ public class ServerFilesPanel extends JPanel {
               popup.add(openFolderMenuItem);
           }
           popup.show(ServerFilesPanel.this, x, y);
-          //selectedListElement.isDirectory();
         }
       }
     });

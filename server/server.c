@@ -136,14 +136,27 @@ int handleConnection(int clientSocket) {
     else if(strcmp(action, "fileDw") == 0) {
       printf("\tFile download request.\n");
 
-      char path[512];
-      memset(path, 0, sizeof(path));
+      char fileName[512];
+      memset(fileName, 0, sizeof(fileName));
+      if(recv(clientSocket, &fileName, sizeof(fileName), 0) == -1) {
+        printf("\tFile name retrieve error.\n");
+        continue;
+      }
+      printf("\t\tPath: \"%s\"\n", fileName);
 
-      printf("\tRetrieving path.\n");
-      recv(clientSocket, &path, sizeof(path), 0);
-      printf("\t\tPath: \"%s\"\n", path);
-
-      sendFile(clientSocket, path);
+      int actualPathSize = arraySize(actualPath);
+      char pathToFile[actualPathSize + arraySize(fileName) + 1];
+      pathToFile[actualPathSize] = '/';
+      int i = 0;
+      for(i; i < actualPathSize; i = i + 1) {
+        pathToFile[i] = actualPath[i];
+      }
+      i = 0;
+      for(i; i < arraySize(fileName); i = i + 1) {
+        pathToFile[i + actualPathSize + 1] = fileName[i];
+      }
+      printf("\tSending %s\n", pathToFile);
+      sendFile(clientSocket, pathToFile);
     }
     else {
       printf("\tDemand error.\n");
